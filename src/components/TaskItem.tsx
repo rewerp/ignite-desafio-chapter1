@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { FlatList, Image, TouchableOpacity, View, Text, StyleSheet, FlatListProps } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { FlatList, Image, TouchableOpacity, View, Text, StyleSheet, FlatListProps, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { ItemWrapper } from './ItemWrapper';
 
 import trashIcon from '../assets/icons/trash/trash.png'
+import editIcon from '../assets/icons/edit/edit.png'
+import { EditTaskArgs } from '../pages/Home';
 
 export interface Task {
   id: number;
@@ -13,30 +15,53 @@ export interface Task {
 }
 
 interface TasksItemProps {
-  tasks: Task[];
+  task: Task;
   toggleTaskDone: (id: number) => void;
   removeTask: (id: number) => void;
-  editTask: (id: number) => void;
+  editTask: ({ taskId, taskNewTitle }: EditTaskArgs) => void;
 }
 
-const [taskEditing, setTaskediting] = useState(false);
-const [taskNewTitle, setTasNewTitle] = useState(task.title);
+export function TasksItem({ task, toggleTaskDone, removeTask, editTask }: TasksItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [taskNewTitleValue, setTaskNewTitleValue] = useState(task.title);
+  const textInputRef = useRef<TextInput>(null);
 
-export function TasksItem({ tasks, toggleTaskDone, removeTask, editTask }: TasksItemProps) {
+  function handleStartEditing() {
+    setIsEditing(true);
+  }
+
+  function handleCancelEditing() {
+    setTaskNewTitleValue(task.title);
+    setIsEditing(false);
+  }
+
+  function handleSubmitEditing() {
+    editTask({ taskId: task.id, taskNewTitle: taskNewTitleValue });
+    setIsEditing(false);
+  }
+
+  useEffect(() => {
+    if (textInputRef.current) {
+      if (isEditing) {
+        textInputRef.current.focus();
+      } else {
+        textInputRef.current.blur();
+      }
+    }
+  }, [isEditing])
+
   return (
-    <>
+    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} >
       <View>
         <TouchableOpacity
-          testID={`button-${index}`}
           activeOpacity={0.7}
           style={styles.taskButton}
-          onPress={() => toggleTaskDone(item.id)}
+          onPress={() => toggleTaskDone(task.id)}
         >
           <View
-            testID={`marker-${index}`}
-            style={item.done ? styles.taskMarkerDone : styles.taskMarker}
+            style={task.done ? styles.taskMarkerDone : styles.taskMarker}
           >
-            {item.done && (
+            {task.done && (
               <Icon
                 name="check"
                 size={12}
@@ -45,22 +70,55 @@ export function TasksItem({ tasks, toggleTaskDone, removeTask, editTask }: Tasks
             )}
           </View>
 
+          <TextInput
+            value={taskNewTitleValue}
+            onChangeText={setTaskNewTitleValue}
+            editable={isEditing}
+            onSubmitEditing={handleSubmitEditing}
+            style={task.done ? styles.taskTextDone : styles.taskText}
+            ref={textInputRef}
+          />
+          {/* 
           <Text
-            style={item.done ? styles.taskTextDone : styles.taskText}
+            style={task.done ? styles.taskTextDone : styles.taskText}
           >
-            {item.title}
-          </Text>
+            {task.title}
+          </Text> */}
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        testID={`trash-${index}`}
+      {/* <TouchableOpacity
         style={{ paddingHorizontal: 24 }}
-        onPress={() => removeTask(item.id)}
+        onPress={() => removeTask(task.id)}
       >
         <Image source={trashIcon} />
-      </TouchableOpacity>
-    </>
+      </TouchableOpacity> */}
+
+      <View>
+        {isEditing ? (
+          <TouchableOpacity
+            style={{ paddingHorizontal: 24 }}
+            onPress={handleCancelEditing}
+          >
+            <Icon name="x" size={24} color="#b2b2b2" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={{ paddingHorizontal: 24 }}
+            onPress={handleStartEditing}
+          >
+            <Image source={editIcon} />
+          </TouchableOpacity>
+        )
+        }
+        <TouchableOpacity
+            style={{ paddingHorizontal: 24 }}
+            onPress={() => removeTask(task.id)}
+          >
+            <Image source={trashIcon} />
+          </TouchableOpacity>
+      </View>
+    </View>
   )
 }
 

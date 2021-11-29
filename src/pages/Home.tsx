@@ -5,11 +5,16 @@ import { Header } from '../components/Header';
 import { Task, TasksList } from '../components/TasksList';
 import { TodoInput } from '../components/TodoInput';
 
-interface Task {
-  id: number;
-  title: string;
-  done: boolean;
-  editTask: boolean;
+// export interface Task {
+//   id: number;
+//   title: string;
+//   done: boolean;
+//   editTask: boolean;
+// }
+
+export type EditTaskArgs = {
+  taskId: number;
+  taskNewTitle: string;
 }
 
 export function Home() {
@@ -27,12 +32,7 @@ export function Home() {
       return (
         Alert.alert(
           "Task já cadastrada",
-          "Você não pode cadastrar uma task com o mesmo nome",
-          [
-            {
-              text: "OK"
-            }
-          ]
+          "Você não pode cadastrar uma task com o mesmo nome"
         )
       );
     }
@@ -60,6 +60,7 @@ export function Home() {
       "Tem certeza que você deseja remover esse item?",
       [
         {
+          style: "cancel",
           text: "Não"
         },
         {
@@ -70,14 +71,14 @@ export function Home() {
     )
   }
 
-  function handleEditTask(taskId: number, taskNewTitle: string) {
+  function handleEditTask( { taskId, taskNewTitle }: EditTaskArgs ) {
     const updatedTasks = tasks.map(tasks => ({ ...tasks }))
-    const foundItem = updatedTasks.find(item => item.id === taskId);
+    const taskToBeUpdated = updatedTasks.find(item => item.id === taskId);
 
-    if (!foundItem)
+    if (!taskToBeUpdated)
       return;
 
-    foundItem.title = taskNewTitle;
+      taskToBeUpdated.title = taskNewTitle;
 
     setTasks(updatedTasks);
   }
@@ -92,6 +93,7 @@ export function Home() {
         tasks={tasks}
         toggleTaskDone={handleToggleTaskDone}
         removeTask={handleRemoveTask}
+        editTask={handleEditTask}
       />
     </View>
   )
